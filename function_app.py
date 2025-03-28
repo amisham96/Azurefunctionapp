@@ -1,28 +1,53 @@
-import datetime
+import json
 import logging
+import os
 
 import azure.functions as func
-from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
+from azure.storage.queue import QueueClient, QueueServiceClient
 
 app = func.FunctionApp()
 
-def upload_blob_data(blob_service_client: BlobServiceClient, container_name: str):
+# Replace with your actual connection string
+connection_string = os.getenv("AzureWebJobsStorage")
+blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
-     time_now  = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S') 
-     blob_client = blob_service_client.get_blob_client(container=container_name, blob=f"{time_now}.txt")
-     data = b"Sample data for blob"
+@app.route(route="http_trigger", auth_level=func.AuthLevel.ANONYMOUS)
+def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+    
+    # Getting 'name' from the query or body
+    name = req.params.get('name')
+    if not name:
+        try:
+            req_body = req.get_json()
+        except ValueError:
+            pass
+        else:
+            name = req_body.get('name')
 
-     # Upload the blob data - default blob type is BlockBlob    
-     blob_client.upload_blob(data, blob_type="BlockBlob")
+    if name:
+        # Example: Upload a file to Blob Storage
+        try:
+            # Choose the container and blob name
+            container_name = "container1"
+            blob_name = f"hello_{name}.txt"
+            container_client = blob_service_client.get_container_client(container_name)
+            
+            # Uploading a file to blob
+            blob_client = container_client.get_blob_client(blob_name)
+            data = f"Hello, {name}. This file was created using Azure Functions."
+            blob_client.upload_blob(data, overwrite=True)  # Uploading the data to the blob
+            
+            logging.info(f"Uploaded blob {blob_name} to container {container_name}.")
+            return func.HttpResponse(f"Blob for {name} uploaded successfully.", status_code=200)
 
-@app.timer_trigger(schedule="0 * * * * *", arg_name="myTimer", run_on_startup=False, use_monitor=False) 
-def timer_trigger(myTimer: func.TimerRequest) -> None:
-
-     account_url = "https://kprg950f.blob.core.windows.net"
-     credential = DefaultAzureCredential()
-
-    # Create the BlobServiceClient object
-     blob_service_client = BlobServiceClient(account_url, credential=credential)
-     upload_blob_data(blob_service_client, "container1")
-     logging.info('Python timer trigger function executed.')
+        except Exception as e:
+            logging.error(f"Error uploading blob: {str(e)}")
+            return func.HttpResponse(f"Error uploading blob: {str(e)}", status_code=500)
+        
+    else:
+        return func.HttpResponse(
+             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+             status_code=200
+        )
