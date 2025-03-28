@@ -11,43 +11,19 @@ app = func.FunctionApp()
 def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
-    # Extract the input data from the request body
-    try:
-        input_data = req.get_json()  # Get JSON body from the request
-    except ValueError:
-        return func.HttpResponse(
-            "Invalid JSON format.",
-            status_code=400
-        )
-    
-    # Initialize the response_values list
-    response_values = []
+    name = req.params.get('name')
+    if not name:
+        try:
+            req_body = req.get_json()
+        except ValueError:
+            pass
+        else:
+            name = req_body.get('name')
 
-    # Process each record in the input data
-    if "values" in input_data:
-        for record in input_data["values"]:
-            record_id = record.get("recordId")
-
-            # Append the modified record to response_values
-            response_values.append({
-                "recordId": record_id,
-                "data": {
-                    "layout_intelligence_data": {
-                        "$type": "file",
-                        "url": "https://microsoft-my.sharepoint.com/:x:/p/v-jgs/EQI41ZvJ1VBBsI_j0n7DG6EBvEWcJer1vPvjlsdUxzTgFw?e=jah1Zl"  # Replace "url1" with your actual URL or dynamic value
-                    }
-                }
-            })
-
-        # Create the final response as JSON
-        return func.HttpResponse(
-            json.dumps({"values": response_values}),  # Return as JSON
-            status_code=200,
-            mimetype="application/json"  # Specify that the response is in JSON format
-        )
+    if name:
+        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
     else:
         return func.HttpResponse(
-            json.dumps({"error": "Request body does not contain 'values'."}),
-            status_code=400,
-            mimetype="application/json"
+             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+             status_code=200
         )
