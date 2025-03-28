@@ -1,29 +1,28 @@
-import json
+import datetime
 import logging
 
 import azure.functions as func
+from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
-from azure.storage.queue import QueueClient, QueueServiceClient
 
 app = func.FunctionApp()
 
-@app.route(route="http_trigger", auth_level=func.AuthLevel.ANONYMOUS)
-def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Python HTTP trigger function processed a request.')
+def upload_blob_data(blob_service_client: BlobServiceClient, container_name: str):
 
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-        except ValueError:
-            pass
-        else:
-            name = req_body.get('name')
+     time_now  = datetime.datetime.now().strftime('%m_%d_%Y_%H_%M_%S') 
+     blob_client = blob_service_client.get_blob_client(container=container_name, blob=f"{time_now}.txt")
+     data = b"Sample data for blob"
 
-    if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
-    else:
-        return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
-        )
+     # Upload the blob data - default blob type is BlockBlob    
+     blob_client.upload_blob(data, blob_type="BlockBlob")
+
+@app.timer_trigger(schedule="0 * * * * *", arg_name="myTimer", run_on_startup=False, use_monitor=False) 
+def timer_trigger(myTimer: func.TimerRequest) -> None:
+
+     account_url = "https://kprg950f.blob.core.windows.net"
+     credential = DefaultAzureCredential()
+
+    # Create the BlobServiceClient object
+     blob_service_client = BlobServiceClient(account_url, credential=credential)
+     upload_blob_data(blob_service_client, "container1")
+     logging.info('Python timer trigger function executed.')
