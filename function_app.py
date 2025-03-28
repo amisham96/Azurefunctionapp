@@ -3,8 +3,7 @@ import logging
 import os
 
 import azure.functions as func
-from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
-from azure.storage.queue import QueueClient, QueueServiceClient
+from azure.storage.blob import BlobServiceClient
 
 app = func.FunctionApp()
 
