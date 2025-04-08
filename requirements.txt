@@ -1,6 +1,3 @@
 azure-functions
 azure-identity
 requests
-msal
-azure-core
-cryptography
