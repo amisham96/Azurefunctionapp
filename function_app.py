@@ -1,12 +1,12 @@
 import azure.functions as func
-import logging
+import datetime
 import json
+import logging
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+from azure.identity import DefaultAzureCredential
+app = func.FunctionApp()
 
-@app.route(route="fa_adtest_frontend_trigger")
+@app.route(route="fa_adtest_frontend_trigger", auth_level=func.AuthLevel.FUNCTION)
 def fa_adtest_frontend_trigger(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
-    # When this import is removed, deployment works fine
     credential = DefaultAzureCredential()
-    # Rest of the function code
