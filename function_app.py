@@ -1,6 +1,5 @@
 import azure.functions as func
 import logging
-from azure.identity import DefaultAzureCredential
 import json
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
