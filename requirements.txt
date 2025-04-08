@@ -1,5 +1,5 @@
 azure-functions
-azure-identity==1.15.0
+azure-identity
 requests
 msal
 azure-core
