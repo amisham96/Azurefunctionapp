@@ -1,2 +1,3 @@
 azure-functions
 azure-identity
+cryptography==44.0.1
