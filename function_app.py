@@ -3,7 +3,7 @@ import datetime
 import json
 import logging
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import *
 app = func.FunctionApp()
 
 @app.route(route="fa_adtest_frontend_trigger", auth_level=func.AuthLevel.FUNCTION)
